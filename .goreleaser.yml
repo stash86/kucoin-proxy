@@ -44,18 +44,40 @@ release:
 
 dockers:
   - image_templates:
-      - stash86/kucoin-proxy:latest
-      - stash86/kucoin-proxy:{{ .Version }}
+      - stash86/kucoin-proxy:latest-amd64
+      - stash86/kucoin-proxy:{{ .Version }}-amd64
     dockerfile: docker/ci.Dockerfile
     use: buildx
     goos: linux
-    goarch:
-      - amd64
-      - arm64
-      - arm
-    goarm:
-      - 6
-      - 7
+    goarch: amd64
     build_flag_templates:
       - "--build-arg=VERSION={{ .Version }}"
-      # Platform is auto-detected by buildx for multi-arch, so no need for --platform here
+  - image_templates:
+      - stash86/kucoin-proxy:latest-arm64
+      - stash86/kucoin-proxy:{{ .Version }}-arm64
+    dockerfile: docker/ci.Dockerfile
+    use: buildx
+    goos: linux
+    goarch: arm64
+    build_flag_templates:
+      - "--build-arg=VERSION={{ .Version }}"
+  - image_templates:
+      - stash86/kucoin-proxy:latest-arm-v7
+      - stash86/kucoin-proxy:{{ .Version }}-arm-v7
+    dockerfile: docker/ci.Dockerfile
+    use: buildx
+    goos: linux
+    goarch: arm
+    goarm: 7
+    build_flag_templates:
+      - "--build-arg=VERSION={{ .Version }}"
+  - image_templates:
+      - stash86/kucoin-proxy:latest-arm-v6
+      - stash86/kucoin-proxy:{{ .Version }}-arm-v6
+    dockerfile: docker/ci.Dockerfile
+    use: buildx
+    goos: linux
+    goarch: arm
+    goarm: 6
+    build_flag_templates:
+      - "--build-arg=VERSION={{ .Version }}"
