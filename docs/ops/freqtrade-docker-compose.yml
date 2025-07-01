@@ -1,5 +1,4 @@
 ---
-version: '3'
 services:
   freqtrade:
     image: freqtradeorg/freqtrade:stable
@@ -14,8 +13,8 @@ services:
       --config /freqtrade/user_data/config.json
       --strategy SampleStrategy
 
-  exchange-proxy:
-    image: mikekonan/exchange-proxy:latest-amd64
+  kucoin-proxy:
+    image: stash86/kucoin-proxy:latest
     restart: unless-stopped
     command: -verbose 1
-    container_name: github.com/mikekonan/exchange-proxy-proxy
+    container_name: github.com/stash86/kucoin-proxy-proxy

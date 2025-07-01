@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"net/http"
 
-	"github.com/mikekonan/exchange-proxy/store"
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/sirupsen/logrus"
+	"github.com/stash86/kucoin-proxy/store"
 	"github.com/valyala/fasthttp"
 )
 

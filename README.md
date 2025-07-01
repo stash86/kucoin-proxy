@@ -1,4 +1,4 @@
-# exchange-proxy
+# kucoin-proxy
 
 Exchange proxy using WebSockets to maintain candlestick/klines data in memory, thus having great performance, reducing the number of API calls to the exchange API, decreases latency and CPU usage.
 There is no warranty of correct working. You take all risks of using this.
@@ -7,8 +7,9 @@ All improvements are made by me on a voluntary basis in my spare time.
 ## OPS
 
 ### Usage
+
 ```shell
-Usage of ./dist/exchange-proxy:
+Usage of ./dist/kucoin-proxy:
   -bindaddr string
         bindable address (default "0.0.0.0")
   -cache-size int
@@ -30,25 +31,29 @@ Usage of ./dist/exchange-proxy:
 ```
 
 #### Note
-All unforeseen connection errors or the inaccessibility of the exchange will lead to the proxy crash, which means that you have to handle it on your end 
+
+All unforeseen connection errors or the inaccessibility of the exchange will lead to the proxy crash, which means that you have to handle it on your end
 
 ### Local
+
 ```shell
-./exchange-proxy -port 8080
+./kucoin-proxy -port 8080
 ```
 
 ### Docker (suggested way)
 
-###### Use different tags for different platforms e.g. - latest-amd64, latest-arm-v6, latest-arm-v7, latest-arm64
+#### Use different tags for different platforms e.g. - latest-amd64, latest-arm-v6, latest-arm-v7, latest-arm64
 
 ```shell
-docker run --restart=always -p 127.0.0.1:8080:8080 --name exchange-proxy -d mikekonan/exchange-proxy:latest-amd64
+docker run --restart=always -p 127.0.0.1:8080:8080 --name kucoin-proxy -d stash86/kucoin-proxy:latest-amd64
 ```
 
-#### Examples of usage:
+#### Examples of usage
+
 - [freqtrade](./docs/ops/freqtrade.md)
 
-# Supported exchanges:
+## Supported exchanges
+
 - [Kucoin](./docs/exchanges/kucoin.md)
 
 ## Donations
@@ -61,8 +66,8 @@ Donations are appreciated and will make me motivated to support and improve the 
 - BTC - 35SrQDWAfwXcRGHaKbxNWwvHRNSLAbVjrk
 - ETH - 0x37c34bac13cf60f022be1bdea2dec1136cdc838a
 
+### Referral links
 
-### Referral links:
 - [Kucoin](https://www.kucoin.com/ucenter/signup?rcode=rJ327D3)
 
 - [Okex](https://www.okex.com/join/3941527)

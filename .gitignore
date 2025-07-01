@@ -1,3 +1,4 @@
 .idea
 dist/
 **/*_easyjson.go
+docker-compose.yml

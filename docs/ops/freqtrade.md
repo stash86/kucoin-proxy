@@ -1,14 +1,14 @@
 # Freqtrade OPS
 
-### Local
+## Local
 
 ```shell
-git clone https://github.com/mikekonan/exchange-proxy.git
+git clone https://github.com/stash86/kucoin-proxy.git
 make build
-./exchange-proxy -port 8080 -verbose 1
+./kucoin-proxy -port 8080 -verbose 1
 ```
 
-#### config.json
+### config.json
 
 ```json
 {
@@ -34,15 +34,15 @@ make build
 }
 ```
 
-### Docker (suggested way)
+## Docker (suggested way)
 
-###### Use different tags for different platforms e.g. - latest-amd64, latest-arm-v6, latest-arm-v7, latest-arm64
+### Use different tags for different platforms e.g. - latest-amd64, latest-arm-v6, latest-arm-v7, latest-arm64
 
 ```shell
-docker run --restart=always -p 127.0.0.1:8080:8080 --name exchange-proxy -d mikekonan/exchange-proxy:latest-amd64
+docker run --restart=always -p 127.0.0.1:8080:8080 --name kucoin-proxy -d stash86/kucoin-proxy:latest-amd64
 ```
 
-#### config.json
+### config.json for docker usage
 
 ```json
 {
@@ -68,21 +68,21 @@ docker run --restart=always -p 127.0.0.1:8080:8080 --name exchange-proxy -d mike
 }
 ```
 
-### Docker-compose (best way)
+## Docker-compose (best way)
 
-###### Use different tags for different platforms e.g. - latest-amd64, latest-arm-v6, latest-arm-v7, latest-arm64
+### Use different tags for different platforms e.g. - latest-amd64, latest-arm-v6, latest-arm-v7, latest-arm64 for compose
 
 See example - [docker-compose.yml](freqtrade-docker-compose.yml)
 
 ```yaml
-  exchange-proxy:
-    image: mikekonan/exchange-proxy:latest-amd64
+  kucoin-proxy:
+    image: stash86/kucoin-proxy:latest-amd64
     restart: unless-stopped
-    container_name: exchange-proxy
+    container_name: kucoin-proxy
     command: -verbose 1
 ```
 
-#### config.json
+### config.json for docker-compose
 
 ```json
 {
@@ -95,8 +95,8 @@ See example - [docker-compose.yml](freqtrade-docker-compose.yml)
       "timeout": 60000,
       "urls": {
         "api": {
-          "public": "http://exchange-proxy:8080/kucoin",
-          "private": "http://exchange-proxy:8080/kucoin"
+          "public": "http://kucoin-proxy:8080/kucoin",
+          "private": "http://kucoin-proxy:8080/kucoin"
         }
       }
     },

@@ -7,13 +7,13 @@ generate: clean-generated ## generate
 	go fmt ./...
 
 build: generate ## build binaries
-	go build -trimpath -o ./dist/exchange-proxy
+	go build -trimpath -o ./dist/kucoin-proxy
 
 clean-generated: ## clean generated
 	find . -name '*_easyjson.go' -delete
 
 clean: ## clean
-	rm -rf ./dist/exchange-proxy*
+	rm -rf ./dist/kucoin-proxy*
 	find . -name '*_easyjson.go' -delete
 
 lint: ## lint

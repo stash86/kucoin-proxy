@@ -3,6 +3,8 @@ package store
 import (
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Container struct {
@@ -35,10 +37,12 @@ func (s *TTLCache) Get(key string) *Container {
 
 	container, ok := s.kv[key]
 	if !ok {
+		logrus.Debugf("TTLCache.Get: cache miss for key '%s'", key)
 		return nil
 	}
 
 	if container.expiresAt.Before(time.Now().UTC()) {
+		logrus.Debugf("TTLCache.Get: expired entry for key '%s' (expired at %s)", key, container.expiresAt)
 		delete(s.kv, key)
 		return nil
 	}
@@ -50,8 +54,10 @@ func (s *TTLCache) Store(key string, value []byte) {
 	s.l.Lock()
 	defer s.l.Unlock()
 
+	expiresAt := time.Now().UTC().Add(s.expirationTimeout)
 	s.kv[key] = &Container{
 		raw:       value,
-		expiresAt: time.Now().UTC().Add(s.expirationTimeout),
+		expiresAt: expiresAt,
 	}
+	logrus.Debugf("TTLCache.Store: stored key '%s' (expires at %s)", key, expiresAt)
 }

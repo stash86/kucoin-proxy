@@ -9,9 +9,9 @@ import (
 	"github.com/dgrr/websocket"
 	"github.com/google/uuid"
 	"github.com/mailru/easyjson"
-	"github.com/mikekonan/exchange-proxy/proxy"
-	"github.com/mikekonan/exchange-proxy/store"
 	"github.com/sirupsen/logrus"
+	"github.com/stash86/kucoin-proxy/proxy"
+	"github.com/stash86/kucoin-proxy/store"
 	"go.uber.org/ratelimit"
 )
 

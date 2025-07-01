@@ -1,17 +1,20 @@
 package main
 
 import (
+	"context"
 	_ "embed"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	logrusStack "github.com/Gurpartap/logrus-stack"
 	"github.com/jaffee/commandeer"
-	"github.com/mikekonan/exchange-proxy/proxy"
-	"github.com/mikekonan/exchange-proxy/proxy/kucoin"
-	"github.com/mikekonan/exchange-proxy/store"
 	"github.com/sirupsen/logrus"
+	"github.com/stash86/kucoin-proxy/proxy"
+	"github.com/stash86/kucoin-proxy/proxy/kucoin"
+	"github.com/stash86/kucoin-proxy/store"
 	"github.com/valyala/fasthttp"
 )
 
@@ -67,7 +70,7 @@ func (app *app) Run() error {
 
 	fmt.Println(disclaimer)
 
-	logrus.Infof("starting exchange-proxy: version - '%s'... ", version)
+	logrus.Infof("starting kucoin-proxy: version - '%s'... ", version)
 
 	if app.Verbose > 2 {
 		return fmt.Errorf("wrong verbose level '%d'", app.Verbose)
@@ -75,14 +78,19 @@ func (app *app) Run() error {
 
 	app.configure()
 
+	logrus.Infof("Validating proxy config: %+v", app.ProxyConfig)
 	if err := app.ProxyConfig.Validate(); err != nil {
+		logrus.Errorf("Proxy config validation failed: %v", err)
 		return err
 	}
 
+	logrus.Infof("Validating kucoin config: %+v", app.KucoinConfig)
 	if err := app.KucoinConfig.Validate(); err != nil {
+		logrus.Errorf("Kucoin config validation failed: %v", err)
 		return err
 	}
 
+	logrus.Infof("Initializing HTTP client with timeout: %s", app.ClientTimeout)
 	client := &proxy.Client{
 		Client: fasthttp.Client{
 			ReadTimeout:  app.ClientTimeout,
@@ -90,6 +98,7 @@ func (app *app) Run() error {
 		},
 	}
 
+	logrus.Infof("Initializing proxy server with cache size: %d, TTL cache timeout: %s", app.CacheSize, app.TTLCacheTimeout)
 	proxySrv := proxy.New(&app.ProxyConfig,
 		kucoin.New(
 			store.NewStore(app.CacheSize),
@@ -99,7 +108,31 @@ func (app *app) Run() error {
 		),
 	)
 
-	proxySrv.Serve()
+	// Set up signal handling for graceful shutdown
+	shutdownCh := make(chan os.Signal, 1)
+	signal.Notify(shutdownCh, syscall.SIGINT, syscall.SIGTERM)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		sig := <-shutdownCh
+		logrus.Warnf("Received shutdown signal: %s", sig)
+		err := proxySrv.GracefulShutdown(ctx, fmt.Sprintf("received signal: %s", sig))
+		if err != nil {
+			logrus.Errorf("Graceful shutdown error: %v", err)
+		} else {
+			logrus.Info("Graceful shutdown completed successfully")
+		}
+		os.Exit(0)
+	}()
+
+	logrus.Info("Proxy server starting...")
+	err := proxySrv.Serve()
+	if err != nil {
+		logrus.Errorf("Proxy server error: %v", err)
+		return fmt.Errorf("proxy server error: %w", err)
+	}
+	logrus.Info("Proxy server stopped.")
 
 	return nil
 }

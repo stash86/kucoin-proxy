@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/mailru/easyjson"
-	"github.com/mikekonan/exchange-proxy/proxy"
-	"github.com/mikekonan/exchange-proxy/store"
-	"github.com/qiangxue/fasthttp-routing"
+	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
+	"github.com/stash86/kucoin-proxy/proxy"
+	"github.com/stash86/kucoin-proxy/store"
 	"go.uber.org/ratelimit"
 )
 
@@ -62,11 +62,13 @@ func (http *http) executeKLinesRequest(pair string, timeframe string, startAt in
 
 	statusCode, data, err := http.client.Get(nil, path)
 	if err != nil {
+		logrus.Errorf("executeKLinesRequest: HTTP request failed for %s: %v", path, err)
 		return statusCode, nil, nil, err
 	}
 
 	kLinesResponse := &kLinesResponse{}
 	if err := easyjson.Unmarshal(data, kLinesResponse); err != nil {
+		logrus.Errorf("executeKLinesRequest: failed to unmarshal response for %s: %v", path, err)
 		return statusCode, nil, data, err
 	}
 
@@ -80,6 +82,7 @@ func (http *http) getKlines(pair string, timeframe string, startAt int64, endAt 
 		if statusCode, kLinesResponse, data, err := http.executeKLinesRequest(pair, timeframe, startAt, endAt); statusCode == 200 {
 			return statusCode, kLinesResponse, data, nil
 		} else {
+			logrus.Warnf("getKlines: attempt %d/%d failed for %s %s %d %d: %v", i, retryCount, pair, timeframe, startAt, endAt, err)
 			if i == retryCount {
 				return statusCode, kLinesResponse, data, fmt.Errorf("get klines request '%s' '%s' '%d' '%d' exceeded retry '%d' attemts: %w", pair, timeframe, startAt, endAt, retryCount, err)
 			}
@@ -99,35 +102,23 @@ func (http *http) Name() string {
 	return "kucoin"
 }
 
-func (http *http) Routes() []struct {
-	Path    string
-	Method  string
-	Handler func(c *routing.Context) error
-} {
-
-	return []struct {
-		Path    string
-		Method  string
-		Handler func(c *routing.Context) error
-	}{
+func (http *http) Routes() []proxy.Route {
+	return []proxy.Route{
 		{
 			Path:    tickersPath,
 			Method:  netHttp.MethodGet,
 			Handler: proxy.TransparentOverCacheHandler(http.transparentRequestURI, http.client, http.ttlCache),
 		},
-
 		{
 			Path:    currenciesPath,
 			Method:  netHttp.MethodGet,
 			Handler: proxy.TransparentOverCacheHandler(http.transparentRequestURI, http.client, http.ttlCache),
 		},
-
 		{
 			Path:    symbolsPath,
 			Method:  netHttp.MethodGet,
 			Handler: proxy.TransparentOverCacheHandler(http.transparentRequestURI, http.client, http.ttlCache),
 		},
-
 		{
 			Path:   kLinesPath,
 			Method: netHttp.MethodGet,
@@ -143,6 +134,7 @@ func (http *http) Routes() []struct {
 				candles := http.store.Get(storeKey(pair, timeframe), startAt, endAt)
 
 				if len(candles) == 0 {
+					logrus.Infof("kLines cache miss for %s %s [%d-%d], fetching from remote", pair, timeframe, startAt.Unix(), endAt.Unix())
 					statusCode, klinesResponse, data, err := http.getKlines(pair, timeframe, startAt.Unix(), endAt.Unix(), 15)
 
 					c.Response.SetStatusCode(statusCode)
@@ -164,6 +156,7 @@ func (http *http) Routes() []struct {
 						)
 
 						if err == nil {
+							logrus.Debugf("subscribing to kLines for %s %s", pair, timeframe)
 							go http.subscriber.subscribeKLines(pair, timeframe)
 						}
 					}
@@ -171,9 +164,11 @@ func (http *http) Routes() []struct {
 					return nil
 				}
 
+				logrus.Debugf("kLines cache hit for %s %s [%d-%d]", pair, timeframe, startAt.Unix(), endAt.Unix())
 				data, err := easyjson.Marshal(genericResponse{Code: "200000", Data: candlesJSON(candles)})
 
 				if err != nil {
+					logrus.Errorf("failed to marshal candles response: %v", err)
 					return err
 				}
 
@@ -183,7 +178,6 @@ func (http *http) Routes() []struct {
 				return err
 			},
 		},
-
 		{
 			Path:    "*",
 			Method:  proxy.AnyHTTPMethod,

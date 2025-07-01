@@ -2,9 +2,8 @@
 package store
 
 import (
-	"fmt"
-
-	"github.com/mikekonan/exchange-proxy/model"
+	"github.com/sirupsen/logrus"
+	"github.com/stash86/kucoin-proxy/model"
 )
 
 type candlesLinkedList struct {
@@ -81,10 +80,12 @@ func (list *candlesLinkedList) get(index int) (*model.Candle, bool) {
 
 func (list *candlesLinkedList) remove(index int) {
 	if !list.withinRange(index) {
+		logrus.Warnf("candlesLinkedList.remove: index %d out of range (len=%d)", index, list.len)
 		return
 	}
 
 	if list.len == 1 {
+		logrus.Debug("candlesLinkedList.remove: clearing last element")
 		list.clear()
 		return
 	}
@@ -102,9 +103,11 @@ func (list *candlesLinkedList) remove(index int) {
 	}
 
 	if element == list.first {
+		logrus.Debugf("candlesLinkedList.remove: removing first element at index %d", index)
 		list.first = element.next
 	}
 	if element == list.last {
+		logrus.Debugf("candlesLinkedList.remove: removing last element at index %d", index)
 		list.last = element.prev
 	}
 	if element.prev != nil {
@@ -203,10 +206,11 @@ func (list *candlesLinkedList) swap(i, j int) {
 func (list *candlesLinkedList) insert(index int, values ...*model.Candle) {
 
 	if !list.withinRange(index) {
-
 		if index == list.len {
 			list.add(values...)
+			return
 		}
+		logrus.Warnf("candlesLinkedList.insert: index %d out of range (len=%d)", index, list.len)
 		return
 	}
 
@@ -228,6 +232,7 @@ func (list *candlesLinkedList) insert(index int, values ...*model.Candle) {
 	}
 
 	if foundElement == list.first {
+		logrus.Debugf("candlesLinkedList.insert: inserting at head, index %d, count %d", index, len(values))
 		oldNextElement := list.first
 		for i, value := range values {
 			newElement := &element{value: value}
@@ -254,31 +259,31 @@ func (list *candlesLinkedList) insert(index int, values ...*model.Candle) {
 	}
 }
 
+// set updates the value at the given index. If index == len, it appends the value.
+// Does nothing if index is out of range.
 func (list *candlesLinkedList) set(index int, value *model.Candle) {
-
 	if !list.withinRange(index) {
-
 		if index == list.len {
 			list.add(value)
+			return
 		}
+		logrus.Warnf("candlesLinkedList.set: index %d out of range (len=%d)", index, list.len)
 		return
 	}
 
 	var foundElement *element
-
 	if list.len-index < index {
 		foundElement = list.last
-		for e := list.len - 1; e != index; {
-			fmt.Println("set last", index, value, foundElement, foundElement.prev)
-			e, foundElement = e-1, foundElement.prev
+		for e := list.len - 1; e != index; e-- {
+			foundElement = foundElement.prev
 		}
 	} else {
 		foundElement = list.first
-		for e := 0; e != index; {
-			e, foundElement = e+1, foundElement.next
+		for e := 0; e != index; e++ {
+			foundElement = foundElement.next
 		}
 	}
-
+	logrus.Debugf("candlesLinkedList.set: setting value at index %d", index)
 	foundElement.value = value
 }
 

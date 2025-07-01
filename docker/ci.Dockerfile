@@ -5,7 +5,7 @@ RUN adduser -g "proxy" -D -H proxy proxy
 RUN apk --no-cache add ca-certificates \
     && rm -rf /var/cache/apk/*
 
-COPY exchange-proxy /bin/proxy
+COPY kucoin-proxy /bin/proxy
 
 USER proxy
 

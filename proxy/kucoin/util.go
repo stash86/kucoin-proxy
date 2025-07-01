@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mikekonan/exchange-proxy/model"
 	"github.com/spf13/cast"
+	"github.com/stash86/kucoin-proxy/model"
 )
 
 var (
